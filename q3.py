@@ -5,8 +5,22 @@ import string
 import random
 from collections import Counter
 
+__author__ = 'Ben Lai'
+__email__ = "laichunpongben@gmail.com"
+
 
 class SubstitutionCipherSolver(object):
+    '''
+    Apply genetic algorithm to find the key of the substitution cipher.
+    Fitness is defined by the ratio of decrypted words found in the dictionary.
+    Alternatively, if a dictionary is not available,
+    fitness can be defined by 1 - cross-entropy
+    of letters against a common distribution.
+    If the key is not found in a run,
+    try re-run with different parameters
+    such as key_population_size and max_no_update_generation.
+    '''
+
     def __init__(self, cipher_text, words, **kwargs):
         self.cipher_text = cipher_text
         self.words = words
