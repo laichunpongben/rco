@@ -8,7 +8,7 @@ import cv2
 __author__ = 'Ben Lai'
 __email__ = "laichunpongben@gmail.com"
 
-class PixelMatcher(object):
+class TemplateMatcher(object):
     def __init__(self, template_path, images_folder_path):
         self.template_path = template_path
         self.images_folder_path = images_folder_path
@@ -38,9 +38,9 @@ if __name__ == '__main__':
 
     template_path = 'q4/large.png'
     images_folder_path = 'q4/small/'
-    pixel_matcher = PixelMatcher(template_path, images_folder_path)
+    template_matcher = TemplateMatcher(template_path, images_folder_path)
     print('Start matching...')
-    pixel_matcher.match_all()
+    template_matcher.match_all()
 
     end = time.time()
     lapsed_sec = end - start
