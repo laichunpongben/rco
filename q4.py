@@ -10,21 +10,21 @@ __author__ = 'Ben Lai'
 __email__ = "laichunpongben@gmail.com"
 
 class PixelMatcher(object):
-    def __init__(self, large_image_path, small_images_folder_path):
-        self.large_image_path = large_image_path
-        self.small_images_folder_path = small_images_folder_path
-        self.large_image = cv2.imread(self.large_image_path, cv2.IMREAD_GRAYSCALE) / 255
+    def __init__(self, template_path, images_folder_path):
+        self.template_path = template_path
+        self.images_folder_path = images_folder_path
+        self.template = cv2.imread(self.template_path, cv2.IMREAD_GRAYSCALE) / 255
 
     def match(self, image_path):
         image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE) / 255
-        corr = signal.correlate2d(self.large_image, image, boundary='symm', mode='same')
+        corr = signal.correlate2d(self.template, image, boundary='symm', mode='same')
         return np.unravel_index(np.argmax(corr), corr.shape)
 
     def match_all(self):
-        small_image_paths = [os.path.join(self.small_images_folder_path, p)
-                             for p in sorted(os.listdir(self.small_images_folder_path))]
+        image_paths = [os.path.join(self.images_folder_path, p)
+                       for p in sorted(os.listdir(self.images_folder_path))]
 
-        for path in small_image_paths:
+        for path in image_paths:
             id_ = path[-7:-4]
             y, x = self.match(path)
             if x and y:
@@ -37,9 +37,9 @@ if __name__ == '__main__':
 
     start = time.time()
 
-    large_image_path = 'q4/large.png'
-    small_images_folder_path = 'q4/small/'
-    pixel_matcher = PixelMatcher(large_image_path, small_images_folder_path)
+    template_path = 'q4/large.png'
+    images_folder_path = 'q4/small/'
+    pixel_matcher = PixelMatcher(template_path, images_folder_path)
     pixel_matcher.match_all()
 
     end = time.time()
