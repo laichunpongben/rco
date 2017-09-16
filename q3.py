@@ -15,7 +15,7 @@ class SubstitutionCipherSolver(object):
     Fitness is defined by the ratio of decrypted words found in the dictionary.
     Alternatively, if a dictionary is not available,
     fitness can be defined by 1 - cross-entropy
-    of letters against a common distribution.
+    of letters against a common distribution. (NotImplemented)
     If the key is not found in a run,
     try re-run with different parameters
     such as key_population_size and max_no_update_generation.
