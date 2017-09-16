@@ -15,6 +15,7 @@ class SubstitutionCipherSolver(object):
         self.key_population_size = kwargs.get('key_population_size', 50)
         self.min_decrpytion_ratio = kwargs.get('min_decrpytion_ratio', 0.1)
         self.max_no_update_generation = kwargs.get('max_no_update_generation', 100)
+        self.mutate_swap = kwargs.get('mutate_swap', 1)
         self.key_population = [self.shuffle(string.ascii_lowercase) for _ in range(self.key_population_size)]
         self.non_ascii_letter_key = self.get_non_ascii_letter_key(self.cipher_text)
         self.last_updated_generation = 0
@@ -76,7 +77,10 @@ class SubstitutionCipherSolver(object):
         return child_key0, child_key1
 
     def mutate(self, key):
-        return self.swap(key)
+        key_ = key
+        for _ in range(self.mutate_swap):
+            key_ = self.swap(key_)
+        return key_
 
     @staticmethod
     def normalize(key):
