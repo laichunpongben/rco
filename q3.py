@@ -12,7 +12,7 @@ class SubstitutionCipherSolver(object):
         self.words = words
         self.plain_text = ''
         self.max_generation = kwargs.get('max_generation', 1000)
-        self.key_population_size = kwargs.get('key_population_size', 100)
+        self.key_population_size = kwargs.get('key_population_size', 50)
         self.min_decrpytion_ratio = kwargs.get('min_decrpytion_ratio', 0.1)
         self.max_no_update_generation = kwargs.get('max_no_update_generation', 100)
         self.key_population = [self.shuffle(string.ascii_lowercase) for _ in range(self.key_population_size)]
@@ -53,9 +53,14 @@ class SubstitutionCipherSolver(object):
         key_indices = [key_.index(c) for c in self.cipher_text]
         return ''.join(alphabet[index] for index in key_indices)
 
+    @staticmethod
+    def remove_non_ascii(text):
+        return ''.join([c if ord(c) < 128 else ' ' for c in text])
+
     def calc_fitness(self, decrypted_text):
         count = 0
-        decrypted_words = list(set(decrypted_text.lower().split(' ')))
+        normalized_decrpyted_text = self.remove_non_ascii(decrypted_text.lower())
+        decrypted_words = list(set(normalized_decrpyted_text.split(' ')))
         for word in decrypted_words:
             if word in self.words:
                 count += 1
@@ -154,8 +159,8 @@ if __name__ == '__main__':
     else:
         print('Decryption unsuccessful! Key not found!')
 
-    print(key)
-    print(fitness)
+    print('Result key: {0}'.format(key))
+    print('Best fitness: {0}'.format(fitness))
     print()
 
     plain_text = solver.decrypt(key)
