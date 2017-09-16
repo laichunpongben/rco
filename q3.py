@@ -12,7 +12,7 @@ class SubstitutionCipherSolver(object):
         self.words = words
         self.plain_text = ''
         self.max_generation = kwargs.get('max_generation', 1000)
-        self.key_population_size = kwargs.get('key_population_size', 50)
+        self.key_population_size = kwargs.get('key_population_size', 20)  # must be even int
         self.min_decrpytion_ratio = kwargs.get('min_decrpytion_ratio', 0.1)
         self.max_no_update_generation = kwargs.get('max_no_update_generation', 100)
         self.mutate_swap = kwargs.get('mutate_swap', 1)
@@ -104,7 +104,7 @@ class SubstitutionCipherSolver(object):
                 decrypted_text = self.decrypt(key)
                 fitness = self.calc_fitness(decrypted_text)
                 key_fitnesses.append((key, fitness))
-            key_fitnesses.sort(key=lambda x: -x[1])
+            random.shuffle(key_fitnesses)
 
             for j in range(int(self.key_population_size / 2)):
                 children_keys = self.crossover(key_fitnesses[j*2][0], key_fitnesses[j*2+1][0])
