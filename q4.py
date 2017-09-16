@@ -3,7 +3,6 @@
 from __future__ import print_function, division
 import os
 import numpy as np
-from scipy import signal, misc
 import cv2
 
 __author__ = 'Ben Lai'
@@ -13,12 +12,12 @@ class PixelMatcher(object):
     def __init__(self, template_path, images_folder_path):
         self.template_path = template_path
         self.images_folder_path = images_folder_path
-        self.template = cv2.imread(self.template_path, cv2.IMREAD_GRAYSCALE) / 255
+        self.template = cv2.imread(self.template_path, cv2.IMREAD_GRAYSCALE)
 
     def match(self, image_path):
-        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE) / 255
-        corr = signal.correlate2d(self.template, image, boundary='symm', mode='same')
-        return np.unravel_index(np.argmax(corr), corr.shape)
+        image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        corr = cv2.matchTemplate(self.template, image, cv2.TM_CCOEFF_NORMED)
+        return np.unravel_index(corr.argmax(), corr.shape)
 
     def match_all(self):
         image_paths = [os.path.join(self.images_folder_path, p)
@@ -28,7 +27,7 @@ class PixelMatcher(object):
             id_ = path[-7:-4]
             y, x = self.match(path)
             if x and y:
-                print('{0},{1},{2}'.format(y, x, id_))
+                print('{0},{1},{2}'.format(x, y, id_))
             else:
                 print('None,None,{0}'.format(id_))
 
@@ -40,6 +39,7 @@ if __name__ == '__main__':
     template_path = 'q4/large.png'
     images_folder_path = 'q4/small/'
     pixel_matcher = PixelMatcher(template_path, images_folder_path)
+    print('Start matching...')
     pixel_matcher.match_all()
 
     end = time.time()
