@@ -18,7 +18,7 @@ class SubstitutionCipherSolver(object):
     of letters against a common distribution. (NotImplemented)
     If the key is not found in a run,
     try re-run with different parameters
-    such as key_population_size and max_no_update_generation.
+    such as chromosome_size and max_no_update_generation.
     '''
 
     def __init__(self, cipher_text, words, **kwargs):
@@ -26,11 +26,11 @@ class SubstitutionCipherSolver(object):
         self.words = words
         self.plain_text = ''
         self.max_generation = kwargs.get('max_generation', 1000)
-        self.key_population_size = kwargs.get('key_population_size', 20)  # must be even int
-        self.min_decrpytion_ratio = kwargs.get('min_decrpytion_ratio', 0.1)
+        self.chromosome_size = kwargs.get('chromosome_size', 30)  # must be even int
+        self.success_threshold = kwargs.get('success_threshold', 0.1)
         self.max_no_update_generation = kwargs.get('max_no_update_generation', 100)
         self.mutate_swap = kwargs.get('mutate_swap', 1)
-        self.key_population = [self.shuffle(string.ascii_lowercase) for _ in range(self.key_population_size)]
+        self.chromosomes = [self.shuffle(string.ascii_lowercase) for _ in range(self.chromosome_size)]
         self.non_ascii_letter_key = self.get_non_ascii_letter_key(self.cipher_text)
         self.last_updated_generation = 0
 
@@ -72,7 +72,7 @@ class SubstitutionCipherSolver(object):
     def remove_non_ascii(text):
         return ''.join([c if ord(c) < 128 else ' ' for c in text])
 
-    def calc_fitness(self, decrypted_text):
+    def fitness(self, decrypted_text):
         count = 0
         normalized_decrpyted_text = self.remove_non_ascii(decrypted_text.lower())
         decrypted_words = list(set(normalized_decrpyted_text.split(' ')))
@@ -114,21 +114,21 @@ class SubstitutionCipherSolver(object):
         best_fitness = 0.0
         for i in range(self.max_generation):
             key_fitnesses = []
-            for key in self.key_population:
+            for key in self.chromosomes:
                 decrypted_text = self.decrypt(key)
-                fitness = self.calc_fitness(decrypted_text)
+                fitness = self.fitness(decrypted_text)
                 key_fitnesses.append((key, fitness))
             random.shuffle(key_fitnesses)
 
-            for j in range(int(self.key_population_size / 2)):
+            for j in range(int(self.chromosome_size / 2)):
                 children_keys = self.crossover(key_fitnesses[j*2][0], key_fitnesses[j*2+1][0])
                 for key in children_keys:
                     key = self.mutate(key)
                     decrypted_text = self.decrypt(key)
-                    fitness = self.calc_fitness(decrypted_text)
+                    fitness = self.fitness(decrypted_text)
                     key_fitnesses.append((key, fitness))
             key_fitnesses.sort(key=lambda x: -x[1])
-            self.key_population = list(list(zip(*key_fitnesses))[0])[:self.key_population_size]
+            self.chromosomes = list(list(zip(*key_fitnesses))[0])[:self.chromosome_size]
             best_trial_fitness = key_fitnesses[0][1]
 
             print('Generation {0}: {1} {2}'.format(i, key_fitnesses[0][0], key_fitnesses[0][1]))
@@ -172,7 +172,7 @@ if __name__ == '__main__':
     print('Start solving...')
     key, fitness = solver.solve()
 
-    if fitness >= solver.min_decrpytion_ratio:
+    if fitness >= solver.success_threshold:
         print('Decryption successful! Key found!')
     else:
         print('Decryption unsuccessful! Key not found!')
