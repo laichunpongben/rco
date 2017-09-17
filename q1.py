@@ -3,8 +3,20 @@
 from __future__ import print_function, division
 import random
 
+__author__ = 'Ben Lai'
+__email__ = "laichunpongben@gmail.com"
+
 
 class ColorMap(object):
+    '''
+    Apply genetic algorithm to find to four-color the map.
+    Fitness is defined by the ratio of different color between adjacent blocks.
+    By the four color theorem, there exists at least one solution.
+    If the coloring is not found in a run,
+    try re-run with different parameters
+    such as chromosome_size and max_no_update_generation.
+    '''
+
     COLORS = ['+', '-', '*', '/']
 
     def __init__(self, map_path, **kwargs):
@@ -65,7 +77,7 @@ class ColorMap(object):
         return child_chromosome0, child_chromosome1
 
     def mutate(self, chromosome):
-        mutation = round(self.mutation_ratio * len(self.blocks))
+        mutation = int(round(self.mutation_ratio * len(self.blocks)))
         chromosome_ = chromosome
         for _ in range(mutation):
             index = int(random.uniform(0, 1) * len(self.blocks))
