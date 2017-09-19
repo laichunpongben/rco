@@ -121,6 +121,22 @@ class Polynomial(object):
                 expression += term.expression
         return expression
 
+    def __eq__(self, polynomial):
+        if self is polynomial:
+            return True
+        elif not isinstance(polynomial, self.__class__):
+            return False
+        elif self.terms == polynomial.terms:
+            return True
+        else:
+            return False
+
+    def __hash__(self):
+        result = 17
+        for term in sorted(self.terms):
+            result = result * 31 + term.__hash__()
+        return result
+
     @staticmethod
     def parse(expression):
         term_expressions = []
@@ -454,6 +470,10 @@ if __name__ == '__main__':
     print(Polynomial('4ab+1').eval(dict(a=1,b=2)))
     print(Polynomial('-3ab+b+1').eval(dict(a=1,b=2)))
     print(Polynomial('-3ab+b+1').eval(dict(a=1)))
+
+    print(Polynomial('2a') == Polynomial('2a'))
+    print(Polynomial('ab') == Polynomial('ba'))
+    print(Polynomial('0') == Polynomial('1'))
 
     # print(AlgebraCalculator.multiply('1', '2'))
     # print(AlgebraCalculator.multiply('1', '0'))
