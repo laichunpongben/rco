@@ -72,10 +72,19 @@ class SubstitutionCipherSolver(object):
     def remove_non_ascii(text):
         return ''.join([c if ord(c) < 128 else ' ' for c in text])
 
+    @staticmethod
+    def remove_punctuation(text):
+        return text.translate(str.maketrans('', '', string.punctuation + '\n'))
+
+    def normalize_text(self, text):
+        text_ = self.remove_non_ascii(text.lower())
+        text_ = self.remove_punctuation(text_)
+        return text_
+
     def fitness(self, decrypted_text):
         count = 0
-        normalized_decrpyted_text = self.remove_non_ascii(decrypted_text.lower())
-        decrypted_words = list(set(normalized_decrpyted_text.split(' ')))
+        normalized_decrpyted_text = self.normalize_text(decrypted_text)
+        decrypted_words = [word for word in list(set(normalized_decrpyted_text.split(' '))) if word]
         for word in decrypted_words:
             if word in self.words:
                 count += 1
