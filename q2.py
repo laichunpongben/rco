@@ -134,7 +134,7 @@ class Polynomial(object):
         return terms
 
     def add(self, polynomial):
-        terms = sorted(self.terms[:] + polynomial.terms[:], key=lambda x: x.variables)
+        terms = sorted(self.terms[:] + polynomial.terms[:])
         return Polynomial(None, terms=terms)
 
     def subtract(self, polynomial):
@@ -146,7 +146,7 @@ class Polynomial(object):
                 term_ = Term(None, coefficient=-term.coefficient, variables=term.variables, constant=term.constant)
             new_terms.append(term_)
 
-        terms = sorted(self.terms + new_terms, key=lambda x: x.variables)
+        terms = sorted(self.terms + new_terms)
         return Polynomial(None, terms=terms)
 
     def multiply(self, polynomial):
@@ -200,6 +200,64 @@ class Term(object):
             result = result * 31 +  ord(k) * v
         result = result * 31 + self.constant
         return result
+
+    def __lt__(self, term):
+        if self.variables and term.variables:
+            count0 = 0
+            for k, v in self.variables.items():
+                count0 += ord(k) * v
+
+            count1 = 0
+            for k, v in term.variables.items():
+                count1 += ord(k) * v
+
+            if count0 < count1:
+                return True
+            elif count0 > count1:
+                return False
+            else:
+                if self.coefficient < term.coefficient:
+                    return True
+                else:
+                    return False
+        elif self.variables and not term.variables:
+            return False
+        elif not self.variables and term.variables:
+            return True
+        else:
+            if self.constant < term.constant:
+                return True
+            else:
+                return False
+
+    def __le__(self, term):
+        if self.variables and term.variables:
+            count0 = 0
+            for k, v in self.variables.items():
+                count0 += ord(k) * v
+
+            count1 = 0
+            for k, v in term.variables.items():
+                count1 += ord(k) * v
+
+            if count0 < count1:
+                return True
+            elif count0 > count1:
+                return False
+            else:
+                if self.coefficient <= term.coefficient:
+                    return True
+                else:
+                    return False
+        elif self.variables and not term.variables:
+            return False
+        elif not self.variables and term.variables:
+            return True
+        else:
+            if self.constant <= term.constant:
+                return True
+            else:
+                return False
 
     @staticmethod
     def parse(expression):
@@ -304,9 +362,16 @@ if __name__ == '__main__':
     print(Term('4ab2') == Term('4b2a'))
     print(Term('4ab2').__hash__())
     print(Term('4b2a').__hash__())
+    print(Term('1') < Term('2'))
+    print(Term('a') < Term('b'))
+    print(Term('a2') < Term('4b'))
 
-    # print(Polynomial('a').add(Polynomial('b')))
-    # print(Polynomial('a').add(Polynomial('2a')))
+    print(Polynomial('a').add(Polynomial('b')))
+    print(Polynomial('a').add(Polynomial('2a')))
+    print(Polynomial('a').subtract(Polynomial('b')))
+    print(Polynomial('a').subtract(Polynomial('2a')))
+
+
 
     # print(AlgebraCalculator.multiply('1', '2'))
     # print(AlgebraCalculator.multiply('1', '0'))
