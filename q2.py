@@ -109,11 +109,13 @@ class Polynomial(object):
                 elif term.coefficient < 0:
                     expression += term.expression
                 else:
-                    if term.constant >= 0:
+                    if term.constant > 0:
                         expression += '+'
                         expression += term.expression
-                    else:
+                    elif term.constant < 0:
                         expression += term.expression
+                    else:
+                        pass
             else:
                 expression += term.expression
         return expression
@@ -128,13 +130,13 @@ class Polynomial(object):
                     term_expressions.append(x[1:])
                 else:
                     term_expressions.append(x)
-        print(term_expressions)
 
         terms = [Term(expression) for expression in term_expressions]
         return terms
 
     def add(self, polynomial):
-        terms = sorted(self.terms[:] + polynomial.terms[:])
+        terms = sorted(self.terms[:] + polynomial.terms[:], reverse=True)
+        terms = self.reduce(terms)
         return Polynomial(None, terms=terms)
 
     def subtract(self, polynomial):
@@ -146,12 +148,38 @@ class Polynomial(object):
                 term_ = Term(None, coefficient=-term.coefficient, variables=term.variables, constant=term.constant)
             new_terms.append(term_)
 
-        terms = sorted(self.terms + new_terms)
+        terms = sorted(self.terms + new_terms, reverse=True)
+        terms = self.reduce(terms)
         return Polynomial(None, terms=terms)
 
     def multiply(self, polynomial):
         terms = []
+        for term0 in self.terms:
+            for term1 in polynomial.terms:
+                term = term0.multiply(term1)
+                terms.append(term)
+        terms = self.reduce(terms)
         return Polynomial(None, terms=terms)
+
+    @staticmethod
+    def reduce(terms):
+        terms_ = terms[:]
+        index = 0
+        while True:
+            # print(index, terms_, len(terms_))
+            if index == len(terms_) - 1:
+                break
+            if terms_[index].variables == terms_[index+1].variables:
+                term = terms_[index].add(terms_[index+1])
+                terms_ = terms_[:index] + [term] + terms_[index+2:]
+                index += -1
+            index += 1
+
+        terms_ = [term for term in terms_ if term.coefficient != 0 or term.constant != 0]
+        if not terms_:
+            terms = [Term(None, coefficient=0, variables={}, constant=0)]
+
+        return terms_
 
 class Term(object):
     def __init__(self, expression=None, **kwargs):
@@ -205,11 +233,11 @@ class Term(object):
         if self.variables and term.variables:
             count0 = 0
             for k, v in self.variables.items():
-                count0 += ord(k) * v
+                count0 += (128 - ord(k)) * v
 
             count1 = 0
             for k, v in term.variables.items():
-                count1 += ord(k) * v
+                count1 += (128 - ord(k)) * v
 
             if count0 < count1:
                 return True
@@ -234,11 +262,11 @@ class Term(object):
         if self.variables and term.variables:
             count0 = 0
             for k, v in self.variables.items():
-                count0 += ord(k) * v
+                count0 += (128 - ord(k)) * v
 
             count1 = 0
             for k, v in term.variables.items():
-                count1 += ord(k) * v
+                count1 += (128 - ord(k)) * v
 
             if count0 < count1:
                 return True
@@ -307,10 +335,20 @@ class Term(object):
             return Polynomial(None, terms=[self, term_])
 
     def multiply(self, term):
-        coefficient = self.coefficient * term.coefficient
-        variables = {k: self.variables.get(k, 0) + term.variables.get(k, 0)
-                     for k in set(self.variables) | set(term.variables)}
-        return Term(None, coefficient=coefficient, variables=variables, constant=0)
+        if self.variables and term.variables:
+            coefficient = self.coefficient * term.coefficient
+            variables = {k: self.variables.get(k, 0) + term.variables.get(k, 0)
+                         for k in set(self.variables) | set(term.variables)}
+            return Term(None, coefficient=coefficient, variables=variables, constant=0)
+        elif self.variables and not term.variables:
+            coefficient = self.coefficient * term.constant
+            return Term(None, coefficient=coefficient, variables=self.variables, constant=0)
+        elif not self.variables and term.variables:
+            coefficient = self.constant * term.coefficient
+            return Term(None, coefficient=coefficient, variables=term.variables, constant=0)
+        else:
+            constant = self.constant * term.constant
+            return Term(None, coefficient=0, variables={}, constant=constant)
 
 if __name__ == '__main__':
     expression = 'a+4-b+(12+(10+c)+d)+((2*e)+3*f)'
@@ -348,8 +386,10 @@ if __name__ == '__main__':
     print(Term('b').add(Term('-a')))
     print(Term('a').add(Term('-b')))
     print(Term('a').add(Term('-a')))
+    print(Term('a').add(Term('1')))
     print(Term('a').multiply(Term('-b')))
     print(Term('-a').multiply(Term('-b')))
+    print(Term('a').multiply(Term('2')))
     print(Term('2a').subtract(Term('a')))
     print(Term('a').subtract(Term('a')))
     print(Term('a').subtract(Term('b')))
@@ -367,10 +407,19 @@ if __name__ == '__main__':
     print(Term('a2') < Term('4b'))
 
     print(Polynomial('a').add(Polynomial('b')))
-    print(Polynomial('a').add(Polynomial('2a')))
+    print(Polynomial('a').add(Polynomial('b+1')))
+    print(Polynomial('a').add(Polynomial('2a+1')))
     print(Polynomial('a').subtract(Polynomial('b')))
     print(Polynomial('a').subtract(Polynomial('2a')))
-
+    print(Polynomial('a').subtract(Polynomial('2a+1')).add(Polynomial('b')))
+    print(Polynomial('a').multiply(Polynomial('a')))
+    print(Polynomial('a').multiply(Polynomial('b')))
+    print(Polynomial('a2').multiply(Polynomial('b3')))
+    print(Polynomial('a+1').multiply(Polynomial('b+1')))
+    print(Polynomial('a+2').multiply(Polynomial('b+1')))
+    print(Polynomial('a+2').multiply(Polynomial('a+1')))
+    print(Polynomial('a+2').multiply(Polynomial('a-1')))
+    print(Polynomial('a2+a+2').multiply(Polynomial('a-1')))
 
 
     # print(AlgebraCalculator.multiply('1', '2'))
