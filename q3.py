@@ -32,6 +32,7 @@ class SubstitutionCipherSolver(object):
         self.mutate_swap = kwargs.get('mutate_swap', 1)
         self.chromosomes = [self.shuffle(string.ascii_lowercase) for _ in range(self.chromosome_size)]
         self.non_ascii_letter_key = self.get_non_ascii_letter_key(self.cipher_text)
+        self.normalized_cipher_text = self.normalize_text(self.cipher_text)
         self.last_updated_generation = 0
 
     @staticmethod
@@ -56,16 +57,16 @@ class SubstitutionCipherSolver(object):
     def extend(self, key):
         return key + key.upper() + self.non_ascii_letter_key
 
-    def encrypt(self, key):
+    def encrypt(self, key, text):
         alphabet = self.extend(string.ascii_lowercase)
         key_ = self.extend(key)
-        key_indices = [alphabet.index(c) for c in self.plain_text]
+        key_indices = [alphabet.index(c) for c in text]
         return ''.join(key_[index] for index in key_indices)
 
-    def decrypt(self, key):
+    def decrypt(self, key, text):
         alphabet = self.extend(string.ascii_lowercase)
         key_ = self.extend(key)
-        key_indices = [key_.index(c) for c in self.cipher_text]
+        key_indices = [key_.index(c) for c in text]
         return ''.join(alphabet[index] for index in key_indices)
 
     @staticmethod
@@ -74,17 +75,23 @@ class SubstitutionCipherSolver(object):
 
     @staticmethod
     def remove_punctuation(text):
-        return text.translate(str.maketrans('', '', string.punctuation + '\n'))
+        text_ = text.translate(str.maketrans('', '', string.punctuation))
+        text_ = text_.replace('\n', ' ')
+        return text_
+
+    @staticmethod
+    def remove_digits(text):
+        return text.translate(str.maketrans('', '', string.digits))
 
     def normalize_text(self, text):
         text_ = self.remove_non_ascii(text.lower())
         text_ = self.remove_punctuation(text_)
+        text_ = self.remove_digits(text_)
         return text_
 
-    def fitness(self, decrypted_text):
+    def fitness(self, normalized_decrypted_text):
         count = 0
-        normalized_decrpyted_text = self.normalize_text(decrypted_text)
-        decrypted_words = [word for word in list(set(normalized_decrpyted_text.split(' '))) if word]
+        decrypted_words = [word for word in list(set(normalized_decrypted_text.split(' '))) if word]
         for word in decrypted_words:
             if word in self.words:
                 count += 1
@@ -95,8 +102,8 @@ class SubstitutionCipherSolver(object):
         index = int(random.uniform(0, 1) * len_key)
         child_key0 = key0[:index] + key1[index:]
         child_key1 = key1[:index] + key0[index:]
-        child_key0 = self.normalize(child_key0)
-        child_key1 = self.normalize(child_key1)
+        child_key0 = self.normalize_key(child_key0)
+        child_key1 = self.normalize_key(child_key1)
         return child_key0, child_key1
 
     def mutate(self, key):
@@ -106,7 +113,7 @@ class SubstitutionCipherSolver(object):
         return key_
 
     @staticmethod
-    def normalize(key):
+    def normalize_key(key):
         d = Counter(key)
         duplicate_chars = [k for k, v in d.items() if v >= 2]
         missing_chars = list(set(string.ascii_lowercase).difference(set(d.keys())))
@@ -124,8 +131,8 @@ class SubstitutionCipherSolver(object):
         for i in range(self.max_generation):
             key_fitnesses = []
             for key in self.chromosomes:
-                decrypted_text = self.decrypt(key)
-                fitness = self.fitness(decrypted_text)
+                normalized_decrypted_text = self.decrypt(key, self.normalized_cipher_text)
+                fitness = self.fitness(normalized_decrypted_text)
                 key_fitnesses.append((key, fitness))
             random.shuffle(key_fitnesses)
 
@@ -133,8 +140,8 @@ class SubstitutionCipherSolver(object):
                 children_keys = self.crossover(key_fitnesses[j*2][0], key_fitnesses[j*2+1][0])
                 for key in children_keys:
                     key = self.mutate(key)
-                    decrypted_text = self.decrypt(key)
-                    fitness = self.fitness(decrypted_text)
+                    normalized_decrypted_text = self.decrypt(key, self.normalized_cipher_text)
+                    fitness = self.fitness(normalized_decrypted_text)
                     key_fitnesses.append((key, fitness))
             key_fitnesses.sort(key=lambda x: -x[1])
             self.chromosomes = list(list(zip(*key_fitnesses))[0])[:self.chromosome_size]
@@ -173,9 +180,9 @@ if __name__ == '__main__':
     # print('Testing functions...')
     # print(solver.swap('abcdef'))
     # print(solver.shuffle('1234567890'))
-    # print(solver.decrypt('fbavxposmyzkdjcnrquhtgweil'))
+    # print(solver.decrypt('fbavxposmyzkdjcnrquhtgweil', solver.cipher_text))
     # print(solver.crossover(string.ascii_lowercase, 'fbavxposmyzkdjcnrquhtgweil'))
-    # print(solver.normalize('fbavxposmyzkdjcnrquhtgweix'))
+    # print(solver.normalize_key('fbavxposmyzkdjcnrquhtgweix'))
     # print()
 
     print('Start solving...')
@@ -190,7 +197,7 @@ if __name__ == '__main__':
     print('Best fitness: {0}'.format(fitness))
     print()
 
-    plain_text = solver.decrypt(key)
+    plain_text = solver.decrypt(key, solver.cipher_text)
     print(plain_text)
 
     end = time.time()
