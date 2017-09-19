@@ -4,6 +4,7 @@ from __future__ import print_function, division
 import re
 import math
 import operator
+from copy import deepcopy
 
 
 class AlgebraCalculator(object):
@@ -181,6 +182,12 @@ class Polynomial(object):
 
         return terms_
 
+    def eval(self, params):
+        terms = sorted([term.eval(params) for term in self.terms], reverse=True)
+        terms = self.reduce(terms)
+        return Polynomial(None, terms=terms)
+
+
 class Term(object):
     def __init__(self, expression=None, **kwargs):
         self.coefficient = 0
@@ -200,11 +207,12 @@ class Term(object):
             expression += str(self.coefficient)
         if self.coefficient == -1:
             expression += '-'
-        for k, v in sorted(self.variables.items()):
-            if v != 0:
-                expression += k
-                if v != 1:
-                    expression += str(v)
+        if self.coefficient != 0:
+            for k, v in sorted(self.variables.items()):
+                if v != 0:
+                    expression += k
+                    if v != 1:
+                        expression += str(v)
         if self.constant != 0 or not expression:
             expression += str(self.constant)
         return expression
@@ -350,6 +358,21 @@ class Term(object):
             constant = self.constant * term.constant
             return Term(None, coefficient=0, variables={}, constant=constant)
 
+    def eval(self, params):
+        if self.variables:
+            coefficient = self.coefficient
+            variables = deepcopy(self.variables)
+            for k, v in sorted(variables.items()):
+                if k in params.keys():
+                    coefficient *= params[k] * v
+                    variables.pop(k)
+            if variables:
+                return Term(None, coefficient=coefficient, variables=variables, constant=0)
+            else:
+                return Term(None, coefficient=0, variables={}, constant=coefficient)
+        else:
+            return deepcopy(self)
+
 if __name__ == '__main__':
     expression = 'a+4-b+(12+(10+c)+d)+((2*e)+3*f)'
     statuses = [
@@ -387,6 +410,7 @@ if __name__ == '__main__':
     print(Term('a').add(Term('-b')))
     print(Term('a').add(Term('-a')))
     print(Term('a').add(Term('1')))
+    print(Term('8').add(Term('1')))
     print(Term('a').multiply(Term('-b')))
     print(Term('-a').multiply(Term('-b')))
     print(Term('a').multiply(Term('2')))
@@ -410,6 +434,7 @@ if __name__ == '__main__':
     print(Polynomial('a').add(Polynomial('b+1')))
     print(Polynomial('a').add(Polynomial('2a+1')))
     print(Polynomial('a').subtract(Polynomial('b')))
+    print(Polynomial('1').subtract(Polynomial('2b')))
     print(Polynomial('a').subtract(Polynomial('2a')))
     print(Polynomial('a').subtract(Polynomial('2a+1')).add(Polynomial('b')))
     print(Polynomial('a').multiply(Polynomial('a')))
@@ -421,6 +446,14 @@ if __name__ == '__main__':
     print(Polynomial('a+2').multiply(Polynomial('a-1')))
     print(Polynomial('a2+a+2').multiply(Polynomial('a-1')))
 
+    print(Term('4ab').eval(dict(a=2, b=3)))
+    print(Term('4ab').eval(dict(a=2)))
+    print(Term('4ab').eval(dict(a=0)))
+
+    print(Polynomial('4ab').eval(dict(a=1,b=2)))
+    print(Polynomial('4ab+1').eval(dict(a=1,b=2)))
+    print(Polynomial('-3ab+b+1').eval(dict(a=1,b=2)))
+    print(Polynomial('-3ab+b+1').eval(dict(a=1)))
 
     # print(AlgebraCalculator.multiply('1', '2'))
     # print(AlgebraCalculator.multiply('1', '0'))
