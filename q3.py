@@ -33,6 +33,7 @@ class SubstitutionCipherSolver(object):
         self.chromosomes = [self.shuffle(string.ascii_lowercase) for _ in range(self.chromosome_size)]
         self.non_ascii_letter_key = self.get_non_ascii_letter_key(self.cipher_text)
         self.normalized_cipher_text = self.normalize_text(self.cipher_text)
+        self.alphabet = self.extend(string.ascii_lowercase)
         self.last_updated_generation = 0
 
     @staticmethod
@@ -58,14 +59,12 @@ class SubstitutionCipherSolver(object):
         return key + key.upper() + self.non_ascii_letter_key
 
     def encrypt(self, key, text):
-        alphabet = self.extend(string.ascii_lowercase)
         key_ = self.extend(key)
-        return text.translate(str.maketrans(alphabet, key_))
+        return text.translate(str.maketrans(self.alphabet, key_))
 
     def decrypt(self, key, text):
-        alphabet = self.extend(string.ascii_lowercase)
         key_ = self.extend(key)
-        return text.translate(str.maketrans(key_, alphabet))
+        return text.translate(str.maketrans(key_, self.alphabet))
 
     @staticmethod
     def remove_non_ascii(text):
