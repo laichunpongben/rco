@@ -95,9 +95,9 @@ class Polynomial(object):
         self.terms = []
         if expression:
             self.terms = self.parse(expression)
+        else:
+            self.terms = kwargs.get('terms', [])
         self.expression = self.__str__()
-        for term in self.terms:
-            print(term)
 
     def __str__(self):
         expression = ''
@@ -133,6 +133,25 @@ class Polynomial(object):
         terms = [Term(expression) for expression in term_expressions]
         return terms
 
+    def add(self, polynomial):
+        terms = sorted(self.terms[:] + polynomial.terms[:], key=lambda x: x.variables)
+        return Polynomial(None, terms=terms)
+
+    def subtract(self, polynomial):
+        new_terms = []
+        for term in polynomial.terms:
+            if term.coefficient == 0:
+                term_ = Term(None, coefficient=0, variables={}, constant=-term.constant)
+            else:
+                term_ = Term(None, coefficient=-term.coefficient, variables=term.variables, constant=term.constant)
+            new_terms.append(term_)
+
+        terms = sorted(self.terms + new_terms, key=lambda x: x.variables)
+        return Polynomial(None, terms=terms)
+
+    def multiply(self, polynomial):
+        terms = []
+        return Polynomial(None, terms=terms)
 
 class Term(object):
     def __init__(self, expression=None, **kwargs):
@@ -158,9 +177,29 @@ class Term(object):
                 expression += k
                 if v != 1:
                     expression += str(v)
-        if self.constant != 0:
+        if self.constant != 0 or not expression:
             expression += str(self.constant)
         return expression
+
+    def __eq__(self, term):
+        if self is term:
+            return True
+        elif not isinstance(term, self.__class__):
+            return False
+        elif self.coefficient == term.coefficient and \
+             self.variables == term.variables and \
+             self.constant == term.constant:
+            return True
+        else:
+            return False
+
+    def __hash__(self):
+        result = 17
+        result = result * 31 + self.coefficient
+        for k, v in sorted(self.variables.items()):
+            result = result * 31 +  ord(k) * v
+        result = result * 31 + self.constant
+        return result
 
     @staticmethod
     def parse(expression):
@@ -173,7 +212,6 @@ class Term(object):
                 normalized_elements.append('-1')
             else:
                 normalized_elements.append(x)
-        # print(normalized_elements)
 
         if any(x.isalpha() for x in normalized_elements):
             variables = {}
@@ -182,6 +220,39 @@ class Term(object):
             return int(normalized_elements[0]), variables, 0
         else:
             return 0, {}, int(normalized_elements[0])
+
+    def add(self, term):
+        if self.variables == term.variables:
+            if self.variables:
+                coefficient = self.coefficient + term.coefficient
+                if coefficient == 0:
+                    return Term(None, coefficient=0, variables={}, constant=0)
+                else:
+                    return Term(None, coefficient=coefficient, variables=self.variables, constant=0)
+            else:
+                return Term(None, coefficient=0, variables={}, constant=self.constant + term.constant)
+        else:
+            return Polynomial(None, terms=[self, term])
+
+    def subtract(self, term):
+        if self.variables == term.variables:
+            if self.variables:
+                coefficient = self.coefficient - term.coefficient
+                if coefficient == 0:
+                    return Term(None, coefficient=0, variables={}, constant=0)
+                else:
+                    return Term(None, coefficient=coefficient, variables=self.variables, constant=0)
+            else:
+                return Term(None, coefficient=0, variables={}, constant=self.constant - term.constant)
+        else:
+            term_ = Term(None, coefficient=-term.coefficient, variables=term.variables, constant=term.constant)
+            return Polynomial(None, terms=[self, term_])
+
+    def multiply(self, term):
+        coefficient = self.coefficient * term.coefficient
+        variables = {k: self.variables.get(k, 0) + term.variables.get(k, 0)
+                     for k in set(self.variables) | set(term.variables)}
+        return Term(None, coefficient=coefficient, variables=variables, constant=0)
 
 if __name__ == '__main__':
     expression = 'a+4-b+(12+(10+c)+d)+((2*e)+3*f)'
@@ -213,13 +284,33 @@ if __name__ == '__main__':
     print(Polynomial('a+b-c+1'))
     print(Polynomial('-1'))
 
+    print(Term('4a').add(Term('a')))
+    print(Term('4a').add(Term('b')))
+    print(Term('-a').add(Term('b')))
+    print(Term('b').add(Term('-a')))
+    print(Term('a').add(Term('-b')))
+    print(Term('a').add(Term('-a')))
+    print(Term('a').multiply(Term('-b')))
+    print(Term('-a').multiply(Term('-b')))
+    print(Term('2a').subtract(Term('a')))
+    print(Term('a').subtract(Term('a')))
+    print(Term('a').subtract(Term('b')))
+    print(Term('5').subtract(Term('1')))
+    print(Term('3').subtract(Term('6')))
+    print(Term('4a').add(Term('a')).subtract(Term('6a')))
+    print(Term('a') == Term('a'))
+    print(Term('a') == Term('b'))
+    print(Term('0') == Term('0'))
+    print(Term('4ab2') == Term('4b2a'))
+    print(Term('4ab2').__hash__())
+    print(Term('4b2a').__hash__())
+
+    # print(Polynomial('a').add(Polynomial('b')))
+    # print(Polynomial('a').add(Polynomial('2a')))
+
     # print(AlgebraCalculator.multiply('1', '2'))
     # print(AlgebraCalculator.multiply('1', '0'))
 
-    # print(calculator.parse_coefficient_variable('4a'))
-    # print(calculator.parse_coefficient_variable('2ab'))
-    # print(calculator.parse_coefficient_variable('a2b2'))
-    # print(calculator.parse_coefficient_variable('0'))
 
     # calculator.calc(expression)
 
