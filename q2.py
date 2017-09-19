@@ -141,7 +141,22 @@ class Polynomial(object):
     def parse(expression):
         term_expressions = []
         elements = re.split(r"(\+[^\+\-\*]+|\-[^\+\-\*]+|\*)", expression)
-        for x in elements:
+        elements_ = [x for x in elements if x]
+
+        index = 0
+        while True:
+            if index == len(elements_) - 1:
+                break
+            if not '*' in elements_:
+                break
+            if elements_[index] == '*':
+                term = Term(elements_[index-1]).multiply(Term(elements_[index+1]))
+                elements_ = elements_[:index-1] + [term.expression] + elements_[index+2:]
+                index = 0
+            else:
+                index += 1
+
+        for x in elements_:
             if x:
                 if x.startswith('+'):
                     term_expressions.append(x[1:])
@@ -474,6 +489,11 @@ if __name__ == '__main__':
     print(Polynomial('2a') == Polynomial('2a'))
     print(Polynomial('ab') == Polynomial('ba'))
     print(Polynomial('0') == Polynomial('1'))
+
+    print(Polynomial('4x*5y'))
+    print(Polynomial('4x*5y+1'))
+    print(Polynomial('z+4x*5y+1'))
+    print(Polynomial('z+4x*5y+2a*3b+1'))
 
     # print(AlgebraCalculator.multiply('1', '2'))
     # print(AlgebraCalculator.multiply('1', '0'))
