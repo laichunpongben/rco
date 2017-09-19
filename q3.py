@@ -26,7 +26,7 @@ class SubstitutionCipherSolver(object):
         self.words = words
         self.plain_text = ''
         self.max_generation = kwargs.get('max_generation', 1000)
-        self.chromosome_size = kwargs.get('chromosome_size', 30)  # must be even int
+        self.chromosome_size = kwargs.get('chromosome_size', 40)  # must be even int
         self.success_threshold = kwargs.get('success_threshold', 0.1)
         self.max_no_update_generation = kwargs.get('max_no_update_generation', 100)
         self.mutate_swap = kwargs.get('mutate_swap', 1)
@@ -60,14 +60,12 @@ class SubstitutionCipherSolver(object):
     def encrypt(self, key, text):
         alphabet = self.extend(string.ascii_lowercase)
         key_ = self.extend(key)
-        key_indices = [alphabet.index(c) for c in text]
-        return ''.join(key_[index] for index in key_indices)
+        return text.translate(str.maketrans(alphabet, key_))
 
     def decrypt(self, key, text):
         alphabet = self.extend(string.ascii_lowercase)
         key_ = self.extend(key)
-        key_indices = [key_.index(c) for c in text]
-        return ''.join(alphabet[index] for index in key_indices)
+        return text.translate(str.maketrans(key_, alphabet))
 
     @staticmethod
     def remove_non_ascii(text):
