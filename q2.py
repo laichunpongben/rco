@@ -92,6 +92,8 @@ class AlgebraCalculator(object):
 
 
 class Polynomial(object):
+    OPERATORS = re.compile(r"(\+|\-|\*)")
+
     def __init__(self, expression=None, **kwargs):
         self.terms = []
         if expression:
@@ -140,21 +142,33 @@ class Polynomial(object):
     @staticmethod
     def parse(expression):
         term_expressions = []
-        elements = re.split(r"(\+[^\+\-\*]+|\-[^\+\-\*]+|\*)", expression)
+        elements = re.split(Polynomial.OPERATORS, expression)
         elements_ = [x for x in elements if x]
+
+        # print(elements_)
 
         index = 0
         while True:
             if index == len(elements_) - 1:
                 break
-            if not '*' in elements_:
+            if not any(x in elements_ for x in ['*', '+', '-']):
                 break
+
             if elements_[index] == '*':
                 term = Term(elements_[index-1]).multiply(Term(elements_[index+1]))
                 elements_ = elements_[:index-1] + [term.expression] + elements_[index+2:]
                 index = 0
+            elif elements_[index] == '-':
+                term = Term(elements_[index+1]).multiply(Term('-1'))
+                elements_ = elements_[:index] + [term.expression] + elements_[index+2:]
+                index = 0
+            elif elements_[index] == '+':
+                elements_ = elements_[:index] + elements_[index+1:]
+                index = 0
             else:
                 index += 1
+
+        # print(elements_)
 
         for x in elements_:
             if x:
@@ -209,7 +223,7 @@ class Polynomial(object):
 
         terms_ = [term for term in terms_ if term.coefficient != 0 or term.constant != 0]
         if not terms_:
-            terms = [Term(None, coefficient=0, variables={}, constant=0)]
+            terms_ = [Term(None, coefficient=0, variables={}, constant=0)]
 
         return terms_
 
@@ -494,6 +508,27 @@ if __name__ == '__main__':
     print(Polynomial('4x*5y+1'))
     print(Polynomial('z+4x*5y+1'))
     print(Polynomial('z+4x*5y+2a*3b+1'))
+
+    p0 = Polynomial('a+4-b+10+c')
+    print(p0.eval(dict(a=5,b=3,c=2)))
+    print(p0.eval(dict(a=2,b=9,c=-7)))
+    print(p0.eval(dict(a=-5,c=-9)))
+    print(p0.eval(dict(a=-3,c=-10)))
+    print(p0.eval(dict(a=-5,c=-10)))
+
+    p3 = Polynomial('z+x-x+y+y')
+    print(p3.eval(dict(x=-11,z=0)))
+    print(p3.eval(dict(x=11,z=4)))
+    print(p3.eval(dict(y=-9,z=0)))
+    print(p3.eval(dict(y=9,z=13)))
+
+    p7 = Polynomial('a*b*x+a*b*y')
+    print(p7.eval(dict(a=1,b=2,x=5,y=10)))
+    print(p7.eval(dict(x=5,y=10)))
+    print(p7.eval(dict(x=5,y=-10)))
+    print(p7.eval(dict(a=10,b=-5)))
+    print(p7.eval(dict(b=-20)))
+
 
     # print(AlgebraCalculator.multiply('1', '2'))
     # print(AlgebraCalculator.multiply('1', '0'))
