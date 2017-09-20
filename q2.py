@@ -6,6 +6,9 @@ import math
 import operator
 from copy import deepcopy
 
+__author__ = 'Ben Lai'
+__email__ = "laichunpongben@gmail.com"
+
 
 class Algebra(object):
     def __init__(self, expression):
