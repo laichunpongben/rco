@@ -249,6 +249,8 @@ class Polynomial(object):
     def eval(self, params):
         terms = sorted([term.eval(params) for term in self.terms], reverse=True)
         terms = self.reduce(terms)
+        # for term in terms:
+        #     print(term)
         return Polynomial(None, terms=terms)
 
 
@@ -302,15 +304,19 @@ class Term(object):
         return result
 
     def __lt__(self, term):
+        # print(self.variables, term.variables)
         if self.variables and term.variables:
-            count0 = 0
-            for k, v in self.variables.items():
-                count0 += (128 - ord(k)) * v
+            count0 = 17
+            for k, v in sorted(self.variables.items()):
+                for _ in range(v):
+                    count0 = count0 * 31 + (128 - ord(k))
 
-            count1 = 0
-            for k, v in term.variables.items():
-                count1 += (128 - ord(k)) * v
+            count1 = 17
+            for k, v in sorted(term.variables.items()):
+                for _ in range(v):
+                    count1 = count1 * 31 + (128 - ord(k))
 
+            # print(self.expression, count0, term.expression, count1)
             if count0 < count1:
                 return True
             elif count0 > count1:
@@ -332,13 +338,15 @@ class Term(object):
 
     def __le__(self, term):
         if self.variables and term.variables:
-            count0 = 0
-            for k, v in self.variables.items():
-                count0 += (128 - ord(k)) * v
+            count0 = 17
+            for k, v in sorted(self.variables.items()):
+                for _ in range(v):
+                    count0 = count0 * 31 + (128 - ord(k))
 
-            count1 = 0
-            for k, v in term.variables.items():
-                count1 += (128 - ord(k)) * v
+            count1 = 17
+            for k, v in sorted(term.variables.items()):
+                for _ in range(v):
+                    count1 = count1 * 31 + (128 - ord(k))
 
             if count0 < count1:
                 return True
@@ -517,6 +525,11 @@ if __name__ == '__main__':
     print(Term('4ab').eval(dict(a=2)))
     print(Term('4ab').eval(dict(a=0)))
 
+    print(Term('2cf') < Term('2de'))
+    print(Term('2cf') <= Term('2de'))
+    print(Term('2de') < Term('cf'))
+    print(Term('2de') <= Term('cf'))
+
     print(Polynomial('4ab').eval(dict(a=1,b=2)))
     print(Polynomial('4ab+1').eval(dict(a=1,b=2)))
     print(Polynomial('-3ab+b+1').eval(dict(a=1,b=2)))
@@ -630,9 +643,9 @@ if __name__ == '__main__':
 
     a9 = Algebra('(a+b)*(c+d)*(e+f)')
     print('Case 9:', a9)
-    print(a9.eval_str('a=1,b=2'))  # 3ce+3cf+3de+3df
+    print(a9.eval_str('a=1,b=2'))
     print(a9.eval_str('b=5,d=10,f=7'))
     print(a9.eval_str('c=-5,d=5,e=10'))
     print(a9.eval_str('b=-3,c=7,d=2,f=9'))
-    print(a9.eval_str('z=0'))  # ace+acf+ade+adf+bce+bcf+bde+bdf
+    print(a9.eval_str('z=0'))
     print()
