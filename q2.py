@@ -436,7 +436,7 @@ class Term(object):
             variables = deepcopy(self.variables)
             for k, v in sorted(variables.items()):
                 if k in params.keys():
-                    coefficient *= params[k] * v
+                    coefficient *= params[k] ** v
                     variables.pop(k)
             if variables:
                 return Term(None, coefficient=coefficient, variables=variables, constant=0)
@@ -634,10 +634,10 @@ if __name__ == '__main__':
 
     a8 = Algebra('(x*a+y*b)*(a*b)')
     print('Case 8:', a8)
-    print(a8.eval_str('a=1,b=2,x=5,y=10'))  # 50
+    print(a8.eval_str('a=1,b=2,x=5,y=10'))
     print(a8.eval_str('x=5,y=10'))
     print(a8.eval_str('x=5,y=-10'))
-    print(a8.eval_str('a=10,b=-5'))  # -500x+250y
+    print(a8.eval_str('a=10,b=-5'))
     print(a8.eval_str('b=-20'))
     print()
 
