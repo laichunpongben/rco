@@ -7,21 +7,19 @@ import operator
 from copy import deepcopy
 
 
-class AlgebraCalculator(object):
-    def __init__(self):
-        self.expression = None
-        self.status = None
-        # self.paren = self.paren_matcher(25)
-        self.op = {
-            '+': operator.add,
-            '-': operator.sub,
-            '*': operator.mul
-        }
+class Algebra(object):
+    def __init__(self, expression, index_start=0, index_end=0):
+        self.expression = expression
+        self.index_start = index_start
+        self.index_end = index_end
+        self.children = []
+        self.polynomial = None
+        self.parse(self.expression)
+        self.regex_children = self.get_regex_children()
+        self.calc()
 
-    def parse_parenthesis(self, expression, level=0, index=0):
-        print(level, index, expression)
-        stack = dict()
-
+    def parse(self, expression):
+        print(expression)
         if not '(' in expression or not ')' in expression:
             return
 
@@ -36,43 +34,86 @@ class AlgebraCalculator(object):
                 counter += -1
                 if counter == 0:
                     index_end = index
-                    sub_expression = expression[index_start:index_end]
-                    self.parse_parenthesis(sub_expression, level+1, index_start)
+                    algebra = Algebra(expression[index_start:index_end], index_start=index_start, index_end=index_end)
+                    self.children.append(algebra)
+                    # sub_expression =
+                    # self.parse(sub_expression, level+1, index_start)
             if counter < 0:
                 print()
                 return
+        return
 
-            # print(index, c, counter)
+    def get_regex_children(self):
+        regex = r"("
+        for index, child in enumerate(self.children):
+            if index > 0:
+                regex += r"|"
+            regex += r"\(" + re.escape(child.expression) + r"\)"
+        regex += r")"
+        return re.compile(regex)
 
-        return stack
+    def calc(self):
+        while not self.polynomial:
+            if self.children:
+                if all(child.polynomial for child in self.children):
+                    # calc this level
+                    expressions = re.split(self.regex_children, self.expression)
+                    for child in self.children:
+                        for index, expression in enumerate(expressions):
+                            if expression == '(' + child.expression + ')':
+                                expressions = expressions[:index] + [child.polynomial] + expressions[index+1:]
+                    print(self.regex_children)
+                    print(expressions)
 
-    # @staticmethod
-    # def paren_matcher(n):
-    #     return re.compile(r"[^()]*?(?:\("*n+r"[^()]*?"+r"\)[^()]*?)*?"*n)
+                    polynomials = []
+                    for expression in expressions:
+                        if not isinstance(expression, Polynomial):
+                            elements = re.split(r"([\+\-\*])", expression)
+                            polynomials.extend(elements)
+                        else:
+                            polynomials.append(expression)
+                    polynomials = [p for p in polynomials if p or p == '0']
+                    print(polynomials)
+                    polynomials = [Polynomial(p) if not isinstance(p, Polynomial) and
+                                   p not in ['+', '-', '*'] else p for p in polynomials]
+                    print(polynomials)
 
+                    index = 0
+                    while '*' in polynomials:
+                        if index == len(polynomials) - 1:
+                            break
 
+                        if polynomials[index] == '*':
+                            polynomial = polynomials[index-1].multiply(polynomials[index+1])
+                            polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
+                            index += -1
+                        index += 1
 
-    def add(self, x, y):
-        pass
+                    index = 0
+                    while len(polynomials) > 1:
+                        if index == len(polynomials) - 1:
+                            break
 
-    def subtract(self, x, y):
-        pass
+                        if polynomials[index] == '+':
+                            polynomial = polynomials[index-1].add(polynomials[index+1])
+                            polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
+                            index += -1
+                        elif polynomials[index] == '-':
+                            polynomial = polynomials[index-1].subtract(polynomials[index+1])
+                            polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
+                            index += -1
+                        index += 1
+                        # reduction
 
-    @staticmethod
-    def multiply(expression0, expression1):
-        x = Polynomial(expression0)
-        y = Polynomial(expression1)
-        coefficient = x.coefficient * y.coefficient
-        variables = {k: x.variables.get(k, 0) + y.variables.get(k, 0)
-                     for k in set(x.variables) | set(y.variables)}
-        constant = x.constant + y.constant
-        print('con', type(x.constant), type(y.constant))
-        expression = Polynomial(None, coefficient=coefficient, variables=variables, constant=constant)
-        return expression.expression
-
-    def calc(self, expression):
-        self.expression = expression
-        # print(self.paren.match(expression))
+                    self.polynomial = polynomials[0]
+                    print(self.polynomial)
+                else:
+                    for child in self.children:
+                        if not child.polynomial:
+                            child.calc()
+            else:
+                self.polynomial = Polynomial(self.expression)
+                print('tree leaf', self.polynomial)
 
     @staticmethod
     def string_to_dict(param_str):
@@ -428,8 +469,8 @@ if __name__ == '__main__':
         'a=-5,c=-10',
     ]
 
-    calculator = AlgebraCalculator()
-    calculator.parse_parenthesis(expression)
+    algebra = Algebra(expression)
+    print(algebra.polynomial.expression)
 
     print(Term('4a'))
     print(Term('2ab'))
@@ -528,13 +569,3 @@ if __name__ == '__main__':
     print(p7.eval(dict(x=5,y=-10)))
     print(p7.eval(dict(a=10,b=-5)))
     print(p7.eval(dict(b=-20)))
-
-
-    # print(AlgebraCalculator.multiply('1', '2'))
-    # print(AlgebraCalculator.multiply('1', '0'))
-
-
-    # calculator.calc(expression)
-
-    # for status in statuses:
-    #     print(calculator.eval(status))
