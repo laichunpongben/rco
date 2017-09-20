@@ -87,12 +87,19 @@ class Algebra(object):
                             break
 
                         if polynomials[index] == '+':
-                            polynomial = polynomials[index-1].add(polynomials[index+1])
-                            polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
+                            if index == 0:
+                                polynomials = polynomials[index+1:]
+                            else:
+                                polynomial = polynomials[index-1].add(polynomials[index+1])
+                                polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
                             index += -1
                         elif polynomials[index] == '-':
-                            polynomial = polynomials[index-1].subtract(polynomials[index+1])
-                            polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
+                            if index == 0:
+                                polynomial = polynomials[index+1].multiply(Polynomial('-1'))
+                                polynomials = [polynomial] + polynomials[index+2:]
+                            else:
+                                polynomial = polynomials[index-1].subtract(polynomials[index+1])
+                                polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
                             index += -1
                         index += 1
 
@@ -600,13 +607,13 @@ if __name__ == '__main__':
     print(a3.eval_str('y=9,z=13'))
     print()
 
-    # a4 = Algebra('-a-((b-c)-d)-((e-f)-(g-(h-(i-j))))')
-    # print('Case 4:', a4)
-    # print(a4.eval_str('a=10,b=9,c=8,d=7,e=6,f=5,g=4,h=3,i=2,j=1'))
-    # print(a4.eval_str('a=10,b=9,c=8,d=7'))
-    # print(a4.eval_str('a=10,c=8,e=6,g=4,i=2'))
-    # print(a4.eval_str('b=9,d=7,f=5,h=3,j=1'))
-    # print()
+    a4 = Algebra('-a-((b-c)-d)-((e-f)-(g-(h-(i-j))))')
+    print('Case 4:', a4)
+    print(a4.eval_str('a=10,b=9,c=8,d=7,e=6,f=5,g=4,h=3,i=2,j=1'))
+    print(a4.eval_str('a=10,b=9,c=8,d=7'))
+    print(a4.eval_str('a=10,c=8,e=6,g=4,i=2'))
+    print(a4.eval_str('b=9,d=7,f=5,h=3,j=1'))
+    print()
 
     a5 = Algebra('(x-x)+(y-y)')
     print('Case 5:', a5)
