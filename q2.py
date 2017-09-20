@@ -36,10 +36,7 @@ class Algebra(object):
                     index_end = index
                     algebra = Algebra(expression[index_start:index_end], index_start=index_start, index_end=index_end)
                     self.children.append(algebra)
-                    # sub_expression =
-                    # self.parse(sub_expression, level+1, index_start)
             if counter < 0:
-                print()
                 return
         return
 
@@ -56,7 +53,6 @@ class Algebra(object):
         while not self.polynomial:
             if self.children:
                 if all(child.polynomial for child in self.children):
-                    # calc this level
                     expressions = re.split(self.regex_children, self.expression)
                     for child in self.children:
                         for index, expression in enumerate(expressions):
@@ -103,7 +99,6 @@ class Algebra(object):
                             polynomials = polynomials[:index-1] + [polynomial] + polynomials[index+2:]
                             index += -1
                         index += 1
-                        # reduction
 
                     self.polynomial = polynomials[0]
                     print(self.polynomial)
@@ -117,20 +112,14 @@ class Algebra(object):
 
     @staticmethod
     def string_to_dict(param_str):
-        d = dict()
-        param_strs = param_str.split(',')
-        for s in param_strs:
-            k, v = s.split('=')
-            d[k] = v
-        return d
+        return dict((k, int(v)) for k, v in (item.split('=') for item in param_str.split(',')))
 
-    def eval_stack(self, stack):
-        pass
+    def eval(self, params):
+        return self.polynomial.eval(params)
 
-    def eval(self, status):
-        # self.status = status
-        params = self.string_to_dict(status)
-
+    def eval_str(self, param_str):
+        params = self.string_to_dict(param_str)
+        return self.eval(params)
 
 class Polynomial(object):
     OPERATORS = re.compile(r"(\+|\-|\*)")
@@ -186,8 +175,6 @@ class Polynomial(object):
         elements = re.split(Polynomial.OPERATORS, expression)
         elements_ = [x for x in elements if x]
 
-        # print(elements_)
-
         index = 0
         while True:
             if index == len(elements_) - 1:
@@ -208,8 +195,6 @@ class Polynomial(object):
                 index = 0
             else:
                 index += 1
-
-        # print(elements_)
 
         for x in elements_:
             if x:
@@ -471,6 +456,9 @@ if __name__ == '__main__':
 
     algebra = Algebra(expression)
     print(algebra.polynomial.expression)
+
+    print(algebra.string_to_dict('a=1,b=2'))
+    print(algebra.eval_str('a=1,b=2'))
 
     print(Term('4a'))
     print(Term('2ab'))
