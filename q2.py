@@ -8,18 +8,18 @@ from copy import deepcopy
 
 
 class Algebra(object):
-    def __init__(self, expression, index_start=0, index_end=0):
+    def __init__(self, expression):
         self.expression = expression
-        self.index_start = index_start
-        self.index_end = index_end
         self.children = []
         self.polynomial = None
         self.parse(self.expression)
         self.regex_children = self.get_regex_children()
         self.calc()
 
+    def __str__(self):
+        return self.expression
+
     def parse(self, expression):
-        print(expression)
         if not '(' in expression or not ')' in expression:
             return
 
@@ -34,7 +34,7 @@ class Algebra(object):
                 counter += -1
                 if counter == 0:
                     index_end = index
-                    algebra = Algebra(expression[index_start:index_end], index_start=index_start, index_end=index_end)
+                    algebra = Algebra(expression[index_start:index_end])
                     self.children.append(algebra)
             if counter < 0:
                 return
@@ -58,8 +58,6 @@ class Algebra(object):
                         for index, expression in enumerate(expressions):
                             if expression == '(' + child.expression + ')':
                                 expressions = expressions[:index] + [child.polynomial] + expressions[index+1:]
-                    print(self.regex_children)
-                    print(expressions)
 
                     polynomials = []
                     for expression in expressions:
@@ -69,10 +67,8 @@ class Algebra(object):
                         else:
                             polynomials.append(expression)
                     polynomials = [p for p in polynomials if p or p == '0']
-                    print(polynomials)
                     polynomials = [Polynomial(p) if not isinstance(p, Polynomial) and
                                    p not in ['+', '-', '*'] else p for p in polynomials]
-                    print(polynomials)
 
                     index = 0
                     while '*' in polynomials:
@@ -101,14 +97,12 @@ class Algebra(object):
                         index += 1
 
                     self.polynomial = polynomials[0]
-                    print(self.polynomial)
                 else:
                     for child in self.children:
                         if not child.polynomial:
                             child.calc()
             else:
                 self.polynomial = Polynomial(self.expression)
-                print('tree leaf', self.polynomial)
 
     @staticmethod
     def string_to_dict(param_str):
@@ -238,7 +232,6 @@ class Polynomial(object):
         terms_ = terms[:]
         index = 0
         while True:
-            # print(index, terms_, len(terms_))
             if index == len(terms_) - 1:
                 break
             if terms_[index].variables == terms_[index+1].variables:
@@ -557,3 +550,89 @@ if __name__ == '__main__':
     print(p7.eval(dict(x=5,y=-10)))
     print(p7.eval(dict(a=10,b=-5)))
     print(p7.eval(dict(b=-20)))
+
+    print()
+
+    a0 = Algebra('a+4-b+10+c')
+    print('Case 0:', a0)
+    print(a0.eval_str('a=5,b=3,c=2'))
+    print(a0.eval_str('a=2,b=9,c=-7'))
+    print(a0.eval_str('a=-5,c=-9'))
+    print(a0.eval_str('a=-3,c=-10'))
+    print(a0.eval_str('a=-5,c=-10'))
+    print()
+
+    a1 = Algebra('x+4-(y-30)')
+    print('Case 1:', a1)
+    print(a1.eval_str('x=1,y=0'))
+    print(a1.eval_str('x=5'))
+    print(a1.eval_str('y=-2'))
+    print(a1.eval_str('z=10'))
+    print()
+
+    a2 = Algebra('4-x+y-(3+x-y)')
+    print('Case 2:', a2)
+    print(a2.eval_str('x=4,y=2'))
+    print(a2.eval_str('x=9,y=0'))
+    print(a2.eval_str('x=-100'))
+    print(a2.eval_str('y=-100'))
+    print(a2.eval_str('a=4'))
+    print()
+
+    a3 = Algebra('z+x-x+y+y')
+    print('Case 3:', a3)
+    print(a3.eval_str('x=-11,z=0'))
+    print(a3.eval_str('x=11,z=4'))
+    print(a3.eval_str('y=-9,z=0'))
+    print(a3.eval_str('y=9,z=13'))
+    print()
+
+    # a4 = Algebra('-a-((b-c)-d)-((e-f)-(g-(h-(i-j))))')
+    # print('Case 4:', a4)
+    # print(a4.eval_str('a=10,b=9,c=8,d=7,e=6,f=5,g=4,h=3,i=2,j=1'))
+    # print(a4.eval_str('a=10,b=9,c=8,d=7'))
+    # print(a4.eval_str('a=10,c=8,e=6,g=4,i=2'))
+    # print(a4.eval_str('b=9,d=7,f=5,h=3,j=1'))
+    # print()
+
+    a5 = Algebra('(x-x)+(y-y)')
+    print('Case 5:', a5)
+    print(a5.eval_str('x=0,y=0'))
+    print(a5.eval_str('x=1,y=2'))
+    print(a5.eval_str('z=10'))
+    print()
+
+    a6 = Algebra('123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+a+b+c+d+e-(v+w+x+y+z)+a+b+c+d+e-(v+w+x+y+z)+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+123456789+a+b+c+d+e-(v+w+x+y+z)+a+b+c+d+e-(v+w+x+y+z)')
+    print('Case 6:', a6)
+    print(a6.eval_str('x=0,y=0'))
+    print(a6.eval_str('x=1,y=2'))
+    print(a6.eval_str('z=10'))
+    print(a6.eval_str('a=99,b=142,c=555,d=113,e=67,v=-123,w=-19,x=-99,y=-1234,z=-256'))
+    print()
+
+    a7 = Algebra('a*b*x+a*b*y')
+    print('Case 7:', a7)
+    print(a7.eval_str('a=1,b=2,x=5,y=10'))
+    print(a7.eval_str('x=5,y=10'))
+    print(a7.eval_str('x=5,y=-10'))
+    print(a7.eval_str('a=10,b=-5'))
+    print(a7.eval_str('b=-20'))
+    print()
+
+    a8 = Algebra('(x*a+y*b)*(a*b)')
+    print('Case 8:', a8)
+    print(a8.eval_str('a=1,b=2,x=5,y=10'))  # 50
+    print(a8.eval_str('x=5,y=10'))
+    print(a8.eval_str('x=5,y=-10'))
+    print(a8.eval_str('a=10,b=-5'))  # -500x+250y
+    print(a8.eval_str('b=-20'))
+    print()
+
+    a9 = Algebra('(a+b)*(c+d)*(e+f)')
+    print('Case 9:', a9)
+    print(a9.eval_str('a=1,b=2'))  # 3ce+3cf+3de+3df
+    print(a9.eval_str('b=5,d=10,f=7'))
+    print(a9.eval_str('c=-5,d=5,e=10'))
+    print(a9.eval_str('b=-3,c=7,d=2,f=9'))
+    print(a9.eval_str('z=0'))  # ace+acf+ade+adf+bce+bcf+bde+bdf
+    print()
