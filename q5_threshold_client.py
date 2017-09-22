@@ -13,28 +13,33 @@ def p_new(score):
     else:
         return 0.0
 
-clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-clientsocket.connect((socket.gethostname(), 8001))
 
-routes = []
-for i in range(65, 91):
-    for j in range(-1, 2):
-        if 65 <= i + j <= 90:
-            for k in range(-1, 2):
-                if 65 <= i + j + k <= 90:
-                    c = chr(i) + chr(i+j) + chr(i+j+k)
-                    routes.append(c)
+def main():
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect((socket.gethostname(), 8001))
 
-scores = {k: 0 for k in routes}
+    routes = []
+    for i in range(65, 91):
+        for j in range(-1, 2):
+            if 65 <= i + j <= 90:
+                for k in range(-1, 2):
+                    if 65 <= i + j + k <= 90:
+                        c = chr(i) + chr(i+j) + chr(i+j+k)
+                        routes.append(c)
 
-route = 'AAA'
-for i in range(100000):
-    p = p_new(scores[route])
-    if random.uniform(0, 1) <= p:
-        route = random.choice(routes)
-    clientsocket.send('{0}\n'.format(route).encode())
-    buf = clientsocket.recv(1024)
-    if buf:
-        score = int(buf[:-2])
-        scores[route] = score
-clientsocket.close()
+    scores = {k: 0 for k in routes}
+
+    route = 'AAA'
+    for i in range(100000):
+        p = p_new(scores[route])
+        if random.uniform(0, 1) <= p:
+            route = random.choice(routes)
+        clientsocket.send('{0}\n'.format(route).encode())
+        buf = clientsocket.recv(1024)
+        if buf:
+            score = int(buf[:-2])
+            scores[route] = score
+    clientsocket.close()
+
+if __name__ == '__main__':
+    main()

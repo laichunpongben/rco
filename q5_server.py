@@ -30,7 +30,6 @@ class Server(object):
 				if not buf:
 					break
 				c = self.req(buf)
-				# print(buf[:-1].decode(), c)
 				conn.send("{0}\r\n".format(c).encode())
 				sum_ += c
 				r += 1
