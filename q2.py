@@ -259,8 +259,6 @@ class Polynomial(object):
     def eval(self, params):
         terms = sorted([term.eval(params) for term in self.terms], reverse=True)
         terms = self.reduce(terms)
-        # for term in terms:
-        #     print(term)
         return Polynomial(None, terms=terms)
 
 
@@ -314,7 +312,6 @@ class Term(object):
         return result
 
     def __lt__(self, term):
-        # print(self.variables, term.variables)
         if self.variables and term.variables:
             count0 = 17
             for k, v in sorted(self.variables.items()):
@@ -326,7 +323,6 @@ class Term(object):
                 for _ in range(v):
                     count1 = count1 * 31 + (128 - ord(k))
 
-            # print(self.expression, count0, term.expression, count1)
             if count0 < count1:
                 return True
             elif count0 > count1:
@@ -659,3 +655,13 @@ if __name__ == '__main__':
     print(a9.eval_str('b=-3,c=7,d=2,f=9'))
     print(a9.eval_str('z=0'))
     print()
+
+    input_path = 'q2/input0.txt'
+    with open(input_path, 'r') as f:
+        lines = f.readlines()
+        lines = [line[:-1] for line in lines]
+
+    expression = lines[0]
+    algebra = Algebra(expression)
+    for param in lines[2:]:
+        print(algebra.eval_str(param))
