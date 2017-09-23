@@ -9,6 +9,12 @@ __author__ = 'Ben Lai'
 __email__ = "laichunpongben@gmail.com"
 
 class TemplateMatcher(object):
+    '''
+    Apply template matching with OpenCV and
+    output the top-left corner coordinates.
+    If no match, return (None, None).
+    '''
+
     def __init__(self, template_path, images_folder_path):
         self.template_path = template_path
         self.images_folder_path = images_folder_path
