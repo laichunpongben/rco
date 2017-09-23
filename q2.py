@@ -11,6 +11,10 @@ __email__ = "laichunpongben@gmail.com"
 
 
 class Algebra(object):
+    '''
+    Parse algebraic expression into polynomials and evaluate it.
+    '''
+
     def __init__(self, expression):
         self.expression = expression
         self.children = []
