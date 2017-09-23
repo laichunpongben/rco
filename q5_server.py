@@ -4,6 +4,10 @@ import socket
 
 
 class Server(object):
+	'''
+	Implement the server in Python.
+	'''
+
 	A, Z = 0, 25
 
 	def __init__(self):
